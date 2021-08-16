@@ -1,6 +1,3 @@
-var barras = document.getElementById('barras').getContext('2d');
-
-
 function renderChartPizza(c, r, m){
     var pizza = document.getElementById('pizza').getContext('2d');
     console.log('chartPizza....')
@@ -27,6 +24,7 @@ function renderChartPizza(c, r, m){
 }
 
 function renderChartBar(totalDeaths, country){    
+    var barras = document.getElementById('barras').getContext('2d');
     new Chart(barras, {
         type: 'bar',
         data: {
@@ -48,4 +46,20 @@ function renderChartBar(totalDeaths, country){
         }
     });    
 }
-
+renderChartLine()
+function renderChartLine(){
+    var line = document.getElementById('linhas').getContext('2d');
+    new Chart(line, {
+        type: 'line',
+        data: {
+            labes: [7, 6, 5, 4, 3, 2, 1],
+            datasets: [{
+                label: 'My First Dataset',
+                data: [65, 59, 80, 81, 56, 55, 40],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+              }]
+        },
+    });  
+}

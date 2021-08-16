@@ -42,9 +42,10 @@ function applyFilter() {
         .then(function (response) {
             // handle success
             console.log(response.data);
-            const numbers = calcTotals(response.data)        
-            renderKpis(numbers) 
+            const numbers = calcTotals(response.data)
+            renderKpis(numbers)
             console.log(numbers.mediaConfirmed)
+            renderChartLine()
         })
         .catch(function (error) {
             // handle error
@@ -65,12 +66,12 @@ function renderKpis(totals) {
     kpiRecovered.textContent = totals.tRecovered
 }
 
-function calcTotals(days){    
+function calcTotals(days) {
     const tConfirmed = _.sum(days.map(item => item.Confirmed))
     const tDeaths = _.sum(days.map(item => item.Deaths))
     const tRecovered = _.sum(days.map(item => item.Recovered))
     console.log(days.length)
-    console.log(typeof(tConfirmed))
+    console.log(typeof (tConfirmed))
     return {
         tConfirmed,
         tDeaths,

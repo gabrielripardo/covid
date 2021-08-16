@@ -136,11 +136,11 @@ small,
   margin-right: auto;
 }
 
-@media (min-width: 1200px) {
+/* @media (min-width: 1200px) {
   .container {
     width: 1170px;
   }
-}
+} */
 
 /* NAV */
 
@@ -613,7 +613,7 @@ button {
 
   .grid-hero-sidebar {
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, auto);
+    /* grid-template-rows: repeat(3, auto); */
   }
 
   .grid-hero-sidebar .sidebar {
