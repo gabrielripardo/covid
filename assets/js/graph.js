@@ -1,3 +1,4 @@
+// import Utils from './utils.js'
 function renderChartPizza(c, r, m){
     var pizza = document.getElementById('pizza').getContext('2d');
     console.log('chartPizza....')
@@ -46,20 +47,49 @@ function renderChartBar(totalDeaths, country){
         }
     });    
 }
-renderChartLine()
-function renderChartLine(){
+let chartLine = null
+function renderChartLine(days, datas, datasAverage, title){
     var line = document.getElementById('linhas').getContext('2d');
-    new Chart(line, {
+    const DATA_COUNT = 7;
+    const NUMBER_CFG = {count: DATA_COUNT, min: -100, max: 100};
+
+    const labels = days;
+    const data = {
+         labels: labels,
+        datasets: [
+            {
+                label: title[1],
+                data: datasAverage,
+                borderColor: 'red',
+                backgroundColor: '#eee',
+            },
+            {
+                label: title[0],
+                data: datas,
+                borderColor: 'blue',
+                backgroundColor: '#eee',
+            }
+        ]
+    };
+
+    if(chartLine!=null){
+        chartLine.destroy();
+    }
+
+    chartLine = new Chart(line, {
         type: 'line',
-        data: {
-            labes: [7, 6, 5, 4, 3, 2, 1],
-            datasets: [{
-                label: 'My First Dataset',
-                data: [65, 59, 80, 81, 56, 55, 40],
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-              }]
+        data: data,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Curva diária de Covid-19'
+            }
+          }
         },
-    });  
+    })    
 }

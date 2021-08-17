@@ -1,9 +1,14 @@
+const dtStart = document.getElementById('date_start').value
+const dtEnd = document.getElementById('date_end').value
+const country = document.getElementById('cmbCountry')
+const dataType = document.getElementById('cmbData').value
 
+let elBefore = null
 
 fetchCountries()
 function fetchCountries() {
     const countries = 'https://api.covid19api.com/countries'
-    const country = document.getElementById('cmbCountry')
+
     console.log(countries)
     // Make a request for a user with a given ID
     axios.get(countries)
@@ -19,7 +24,8 @@ function fetchCountries() {
                     option.setAttribute('selected', 'selected')
                 }
                 country.appendChild(option)
-            });
+
+            });                  
         })
         .catch(function (error) {
             // handle error
@@ -28,24 +34,28 @@ function fetchCountries() {
         .then(function () {
             // always executed
         });
+
 }
 
 
-function applyFilter() {
-    const dtStart = document.getElementById('date_start')
-    const dtEnd = document.getElementById('date_end')
-    const country = document.getElementById('cmbCountry').value
-    const dataType = document.getElementById('cmbData')
+async function applyFilter() {
+    console.log(dtEnd)
 
-    const countryFilter = 'https://api.covid19api.com/country/' + country + '?from=2020-04-01T00:00:00Z&to=2020-04-03T00:00:00Z'
-    axios.get(countryFilter)
-        .then(function (response) {
+    getElementBefore(country, () => {
+        const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + dtStart + '&to=' + dtEnd
+        axios.get(countryFilter)
+        .then(async function (response) {
             // handle success
             console.log(response.data);
             const numbers = calcTotals(response.data)
             renderKpis(numbers)
-            console.log(numbers.mediaConfirmed)
-            renderChartLine()
+     
+            const daysList = formatDays(response.data)
+            const datasType = getIndividualNums(response.data, dataType)
+            const numsAverage = getAverageNums(response.data, dataType)
+            const titlesDataSet = getTitleDataSet(dataType)
+
+            renderChartLine(daysList, datasType, numsAverage, titlesDataSet)
         })
         .catch(function (error) {
             // handle error
@@ -54,6 +64,8 @@ function applyFilter() {
         .then(function () {
             // always executed
         });
+    })
+
 }
 
 function renderKpis(totals) {
@@ -67,19 +79,83 @@ function renderKpis(totals) {
 }
 
 function calcTotals(days) {
-    const tConfirmed = _.sum(days.map(item => item.Confirmed))
-    const tDeaths = _.sum(days.map(item => item.Deaths))
-    const tRecovered = _.sum(days.map(item => item.Recovered))
-    console.log(days.length)
-    console.log(typeof (tConfirmed))
+    const tConfirmed = _.last(days).Confirmed //; days.filter((index) => index == days.length-1).map(item => item.Confirmed)
+    const tDeaths = _.last(days).Deaths
+    const tRecovered = _.last(days).Recovered
     return {
         tConfirmed,
         tDeaths,
         tRecovered,
-        mediaConfirmed: parseInt(tConfirmed) / days.length,
-        mediaDeaths: parseInt(tDeaths) / days.length,
-        mediaRecovered: parseInt(tRecovered) / days.length,
     }
+}
+
+function formatDays(days) {
+    return days.map((item, index) => moment(item.Date.split("T")[0]).format('DD-MM-YYYY'))
+}
+
+function getIndividualNums(nums, type) {    
+    let aux = 0
+    console.log(elBefore)
+    switch (type) {
+        case 'Confirmed': return nums.reduceRight((previousValue, currentValue, index, array) => {
+            return currentValue.Confirmed - previousValue.Confirmed
+        }); // nums.map(item => item.Confirmed)
+        case 'Deaths': return nums.map((item, index) => {
+            if(index == 0){
+                aux = item.Deaths
+                return item.Deaths - elBefore.Deaths
+            }else{
+                let operation = item.Deaths - aux
+                aux = item.Deaths
+                return operation
+            }   
+            
+        })
+        case 'Recovered': return nums.map(item => item.Recovered)
+    }
+}
+
+
+function getAverageNums(nums, type) {
+    switch (type) {
+        case 'Confirmed': return nums.map(() => _.sum(getIndividualNums(nums, type)) / nums.length)
+        case 'Deaths': return nums.map(() => _.sum(getIndividualNums(nums, type)) / nums.length)
+        case 'Recovered': return nums.map(() => getIndividualNums(nums, type) / nums.length)
+    }
+}
+
+function getTitleDataSet(type) {
+    switch (type) {
+        case 'Confirmed': return ['Número de casos confirmados', 'Média de casos confirmados']
+        case 'Deaths': return ['Número de mortes', 'Média de mortes']
+        case 'Recovered': return ['Número de recuperados', 'Média de recuperados']
+    }
+}
+
+function getDateBefore(date) {
+    console.log(`date: ${date}`)
+    var dt = new Date(date);
+    dt.setDate(dt.getDate());
+    return moment(dt).format('YYYY-MM-DD')
+}
+
+async function getElementBefore(country, callback) {
+    const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + getDateBefore(dtStart) + '&to=' + dtStart
+    await axios.get(countryFilter)
+        .then(function (response) {
+            // handle success
+            console.log(response.data);
+            elBefore = _.first(response.data);
+            callback()
+            // return response.data
+        })
+        .catch(function (error) {
+            // handle error
+            console.log(error);
+        })
+        .then(function () {
+            // always executed
+        });
 }
 
 const btnApply = document.getElementById('filtro')
