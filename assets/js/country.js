@@ -1,7 +1,7 @@
-const dtStart = document.getElementById('date_start').value
-const dtEnd = document.getElementById('date_end').value
+const dtStart = document.getElementById('date_start')
+const dtEnd = document.getElementById('date_end')
 const country = document.getElementById('cmbCountry')
-const dataType = document.getElementById('cmbData').value
+const dataType = document.getElementById('cmbData')
 
 let elBefore = null
 
@@ -39,10 +39,10 @@ function fetchCountries() {
 
 
 async function applyFilter() {
-    console.log(dtEnd)
+    console.log(dtEnd.value)
 
     getElementBefore(country, () => {
-        const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + dtStart + '&to=' + dtEnd
+        const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + dtStart.value + '&to=' + dtEnd.value
         axios.get(countryFilter)
         .then(async function (response) {
             // handle success
@@ -51,9 +51,9 @@ async function applyFilter() {
             renderKpis(numbers)
      
             const daysList = formatDays(response.data)
-            const datasType = getIndividualNums(response.data, dataType)
-            const numsAverage = getAverageNums(response.data, dataType)
-            const titlesDataSet = getTitleDataSet(dataType)
+            const datasType = getIndividualNums(response.data, dataType.value)
+            const numsAverage = getAverageNums(response.data, dataType.value)
+            const titlesDataSet = getTitleDataSet(dataType.value)
 
             renderChartLine(daysList, datasType, numsAverage, titlesDataSet)
         })
@@ -97,9 +97,16 @@ function getIndividualNums(nums, type) {
     let aux = 0
     console.log(elBefore)
     switch (type) {
-        case 'Confirmed': return nums.reduceRight((previousValue, currentValue, index, array) => {
-            return currentValue.Confirmed - previousValue.Confirmed
-        }); // nums.map(item => item.Confirmed)
+        case 'Confirmed': return nums.map((item, index) => {
+            if(index == 0){
+                aux = item.Confirmed
+                return item.Confirmed - elBefore.Confirmed
+            }else{
+                let operation = item.Confirmed - aux
+                aux = item.Confirmed
+                return operation
+            }               
+        })
         case 'Deaths': return nums.map((item, index) => {
             if(index == 0){
                 aux = item.Deaths
@@ -108,10 +115,18 @@ function getIndividualNums(nums, type) {
                 let operation = item.Deaths - aux
                 aux = item.Deaths
                 return operation
-            }   
-            
+            }               
         })
-        case 'Recovered': return nums.map(item => item.Recovered)
+        case 'Recovered': return nums.map((item, index) => {
+            if(index == 0){
+                aux = item.Recovered
+                return item.Recovered - elBefore.Recovered
+            }else{
+                let operation = item.Recovered - aux
+                aux = item.Recovered
+                return operation
+            }               
+        })
     }
 }
 
@@ -120,7 +135,7 @@ function getAverageNums(nums, type) {
     switch (type) {
         case 'Confirmed': return nums.map(() => _.sum(getIndividualNums(nums, type)) / nums.length)
         case 'Deaths': return nums.map(() => _.sum(getIndividualNums(nums, type)) / nums.length)
-        case 'Recovered': return nums.map(() => getIndividualNums(nums, type) / nums.length)
+        case 'Recovered': return nums.map(() => _.sum(getIndividualNums(nums, type)) / nums.length)
     }
 }
 
@@ -140,7 +155,7 @@ function getDateBefore(date) {
 }
 
 async function getElementBefore(country, callback) {
-    const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + getDateBefore(dtStart) + '&to=' + dtStart
+    const countryFilter = 'https://api.covid19api.com/country/' + country.value + '?from=' + getDateBefore(dtStart.value) + '&to=' + dtStart.value
     await axios.get(countryFilter)
         .then(function (response) {
             // handle success
